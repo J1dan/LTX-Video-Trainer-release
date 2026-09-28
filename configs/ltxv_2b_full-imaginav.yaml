@@ -1,0 +1,65 @@
+# 2B full fine-tune on real-clips-121 for 85 epochs.
+
+model:
+  model_source: "LTXV_2B_0.9.6_DEV"
+  training_mode: "full"
+  load_checkpoint: null
+
+conditioning:
+  mode: "none"
+  first_frame_conditioning_p: 1.0
+
+optimization:
+  learning_rate: 1e-5
+  steps: 72477 # ceil(2558 samples * 85 epochs / batch_size 3)
+  batch_size: 3
+  gradient_accumulation_steps: 1
+  max_grad_norm: 1.0
+  optimizer_type: "adamw8bit"
+  scheduler_type: "linear"
+  scheduler_params: {}
+  enable_gradient_checkpointing: true
+
+acceleration:
+  mixed_precision_mode: "bf16"
+  quantization: null
+  load_text_encoder_in_8bit: true
+  compile_with_inductor: false
+  compilation_mode: "reduce-overhead"
+
+data:
+  preprocessed_data_root: datasets/real-clips-121/.precomputed
+  dataset_manifest_path: datasets/real-clips-121/.precomputed/dataset.json
+  num_dataloader_workers: 4
+
+validation:
+  prompts: []
+  interval: null
+
+checkpoints:
+  interval: 4264 # about every 5 epochs at batch size 3
+  keep_last_n: 1
+
+flow_matching:
+  timestep_sampling_mode: "shifted_logit_normal"
+  timestep_sampling_params: {}
+
+hub:
+  push_to_hub: false
+  hub_model_id: null
+
+wandb:
+  enabled: true
+  project: "ltxv-trainer"
+  entity: null
+  tags:
+    - real-clips-121
+    - 2b-full
+    - 85-epochs
+    - bs3
+    - workers4
+    - gradient-checkpointing
+  log_validation_videos: false
+
+seed: 42
+output_dir: "outputs/real-clips-121-2b-full-85epoch"

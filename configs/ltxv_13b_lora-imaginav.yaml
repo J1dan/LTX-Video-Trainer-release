@@ -1,0 +1,75 @@
+# 13B LoRA fine-tune on real-clips-121 for 85 epochs.
+
+model:
+  model_source: "LTXV_13B_097_DEV"
+  training_mode: "lora"
+  load_checkpoint: null
+
+lora:
+  rank: 128
+  alpha: 128
+  dropout: 0.0
+  target_modules:
+    - "to_k"
+    - "to_q"
+    - "to_v"
+    - "to_out.0"
+
+conditioning:
+  mode: "none"
+  first_frame_conditioning_p: 1.0
+
+optimization:
+  learning_rate: 2e-4
+  steps: 108715 # ceil(2558 samples * 85 epochs / batch_size 2)
+  batch_size: 2
+  gradient_accumulation_steps: 1
+  max_grad_norm: 1.0
+  optimizer_type: "adamw8bit"
+  scheduler_type: "linear"
+  scheduler_params: {}
+  enable_gradient_checkpointing: true
+
+acceleration:
+  mixed_precision_mode: "bf16"
+  quantization: null
+  load_text_encoder_in_8bit: true
+  compile_with_inductor: false
+  compilation_mode: "reduce-overhead"
+
+data:
+  preprocessed_data_root: datasets/real-clips-121/.precomputed
+  dataset_manifest_path: datasets/real-clips-121/.precomputed/dataset.json
+  num_dataloader_workers: 4
+
+validation:
+  prompts: []
+  interval: null
+
+checkpoints:
+  interval: 6395 # about every 5 epochs at batch size 2
+  keep_last_n: 2
+
+flow_matching:
+  timestep_sampling_mode: "shifted_logit_normal"
+  timestep_sampling_params: {}
+
+hub:
+  push_to_hub: false
+  hub_model_id: null
+
+wandb:
+  enabled: true
+  project: "ltxv-trainer"
+  entity: null
+  tags:
+    - real-clips-121
+    - 13b-lora
+    - 85-epochs
+    - bs2
+    - workers4
+    - gradient-checkpointing
+  log_validation_videos: false
+
+seed: 42
+output_dir: "outputs/real-clips-121-13b-lora-85epoch"
